@@ -11,8 +11,20 @@ public class SonadeOtsija {
             tulemused.add(new LoiguTulemus(loik, skoor));
         }
         System.out.println("---- SKOORID ----");
+        
+        // väljastab ainult nende lõikude skoorid mis on suurem kui 0 ning kui mitte üheski lõigus 
+        // ei ole relevantset sõna siis väljastab vastava teate ekraanile
+        boolean leidusSobiv = false;
+
         for (LoiguTulemus t : tulemused) {
-            System.out.println("Skoor: " + t.getSkoor());
+            if (t.getSkoor() > 0) {
+                System.out.println("Skoor: " + t.getSkoor());
+                leidusSobiv = true;
+            }
+        }
+        
+        if (!leidusSobiv) {
+            System.out.println("Ükski lõik ei sisaldanud sinu sisestatud sõnu.");
         }
         //võtab iga tulemuse skoori ja sorteerib need ära kasvavas järjekorras
         tulemused.sort(Comparator.comparingInt(LoiguTulemus::getSkoor).reversed());

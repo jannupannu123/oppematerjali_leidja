@@ -17,7 +17,7 @@ public class Peaklass {
         String sisu = faililugeja.loeFail(failitee);
 
         Tekstitootleja tekstitootleja = new Tekstitootleja();
-        List<String> loigud = tekstitootleja.jagaLõikudeks(sisu);
+        List<String> loigud = tekstitootleja.looLõigud(sisu);
         System.out.println("Lõikude arv: " + loigud.size());
 
         Konspekt konspekt = new Konspekt(failitee, sisu, loigud);

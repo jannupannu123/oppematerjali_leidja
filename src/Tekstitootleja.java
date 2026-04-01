@@ -56,7 +56,7 @@ public class Tekstitootleja {
 
         return tekst.trim();
     }
-    private List<String> jagaLõikudeks(String tekst) {
+    public List<String> jagaLõikudeks(String tekst) {
         List<String> loigud = new ArrayList<>();
 
         String normaliseeritud = normaliseeriTekst(tekst);
@@ -71,7 +71,7 @@ public class Tekstitootleja {
 
         return loigud;
     }
-    /*private List<String> poolitaLiigaPikadLoigud(List<String> loigud) {
+    private List<String> poolitaLiigaPikadLoigud(List<String> loigud) {
         List<String> tulemus = new ArrayList<>();
 
         for (String loik : loigud) {
@@ -97,11 +97,11 @@ public class Tekstitootleja {
         }
 
         return tulemus;
-    }*/
-    /*public ArrayList<String> looLõigud(String sisu){
+    }
+    public ArrayList<String> looLõigud(String sisu){
         List<String> lõigud = jagaLõikudeks(sisu);
         List<String> õigePikkusegaLõigud = poolitaLiigaPikadLoigud(lõigud);
         return new ArrayList<>(õigePikkusegaLõigud);
-    }*/
+    }
 
 }

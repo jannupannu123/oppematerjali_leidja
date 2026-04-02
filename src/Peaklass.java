@@ -26,13 +26,15 @@ public class Peaklass {
         String kusimus = sc.nextLine();
         List<String> olulisedSonad = tekstitootleja.eraldaOlulisedSonad(kusimus);
 
+
+
         SonadeOtsija otsija = new SonadeOtsija();
         List<String> parimad = otsija.leiaParimadLoigud(konspekt.getLoigud(), olulisedSonad, 3);
         System.out.println("Olulised sõnad: " + olulisedSonad);
 
         // prindib teksti sedasi ekraanile et oleks mõnusam lugeda
         for (String loik : parimad) {
-            //System.out.println(loik); 
+            //System.out.println(loik);
             String[] sonad = loik.split("\\s+");
             for (int i = 0; i < sonad.length; i++) {
                 System.out.print(sonad[i] + " ");

@@ -11,23 +11,38 @@ public class SonadeOtsija {
             tulemused.add(new LoiguTulemus(loik, skoor));
         }
         System.out.println("---- SKOORID ----");
-        
-        // väljastab ainult nende lõikude skoorid mis on suurem kui 0 ning kui mitte üheski lõigus 
-        // ei ole relevantset sõna siis väljastab vastava teate ekraanile
-        boolean leidusSobiv = false;
 
-        for (LoiguTulemus t : tulemused) {
-            if (t.getSkoor() > 0) {
-                System.out.println("Skoor: " + t.getSkoor());
-                leidusSobiv = true;
-            }
-        }
-        
-        if (!leidusSobiv) {
-            System.out.println("Ükski lõik ei sisaldanud sinu sisestatud sõnu.");
-        }
+
         //võtab iga tulemuse skoori ja sorteerib need ära kasvavas järjekorras
         tulemused.sort(Comparator.comparingInt(LoiguTulemus::getSkoor).reversed());
+
+        // väljastab ainult nende lõikude skoorid mis on suurem kui 0 ning kui mitte üheski lõigus
+        // ei ole relevantset sõna siis väljastab vastava teate ekraanile
+        boolean leidusSobiv = false;
+        int sobivateLoikudeArv = 0;
+
+// loeme sobivad lõigud
+        for (LoiguTulemus t : tulemused) {
+            if (t.getSkoor() > 0) {
+                sobivateLoikudeArv++;
+            }
+        }
+
+// kui ei leitud ühtegi sobivat lõiku
+        if (sobivateLoikudeArv == 0) {
+            System.out.println("Ükski lõik ei sisaldanud sinu sisestatud sõnu.");
+        } else {
+            // prindime arvu
+            System.out.println("Sobivaid lõike leiti: " + sobivateLoikudeArv);
+
+            // prindime skoorid
+            for (LoiguTulemus t : tulemused) {
+                if (t.getSkoor() > 0) {
+                    System.out.println("Skoor: " + t.getSkoor());
+                    leidusSobiv = true;
+                }
+            }
+        }
 
         //lisab nii mitu lõiku lisi kui on ette antud mituTulemust parameetriga
         List<String> parimad = new ArrayList<>();

@@ -30,14 +30,16 @@ public class Tekstitootleja {
                     !sona.equals("selgita") &&
                     !sona.equals("too") &&
                     !sona.equals("ja") &&
-                    !sona.equals("miks")&&
+                    !sona.equals("miks") &&
                     !sona.isBlank()) {
                 olulised.add(sona);
             }
         }
         return olulised;
     }
-    private String normaliseeriTekst(String tekst) {
+
+    //töötab ainult txt faili puhul, sest pdfis ei ole sellised reavhaetused
+    private String normaliseeriTxtTekst(String tekst) {
         // Ühtlustame reavahetused (windowsil on \r\n või mõnel vanal süsteem võib olla \r)
         tekst = tekst.replace("\r\n", "\n");
         tekst = tekst.replace("\r", "\n");
@@ -56,14 +58,14 @@ public class Tekstitootleja {
 
         return tekst.trim();
     }
-    public List<String> jagaLõikudeks(String tekst) {
+
+    public List<String> jagaTxtLõikudeks(String tekst) {
         List<String> loigud = new ArrayList<>();
 
-        String normaliseeritud = normaliseeriTekst(tekst);
+        String normaliseeritud = normaliseeriTxtTekst(tekst);
 
         //nüüd normaliseeeritud teksti, saan õigesti lõikudeks jagada
-        String[] osad = normaliseeritud.split("\\n\\n+");
-
+        String[] osad = normaliseeritud.split("\n\n+");
         for (String osa : osad) {
             osa = osa.trim();
             loigud.add(osa);
@@ -71,7 +73,8 @@ public class Tekstitootleja {
 
         return loigud;
     }
-    private List<String> poolitaLiigaPikadLoigud(List<String> loigud) {
+
+    private List<String> poolitaPDFLoigud(List<String> loigud) {
         List<String> tulemus = new ArrayList<>();
 
         for (String loik : loigud) {
@@ -98,10 +101,29 @@ public class Tekstitootleja {
 
         return tulemus;
     }
-    public ArrayList<String> looLõigud(String sisu){
-        List<String> lõigud = jagaLõikudeks(sisu);
-        List<String> õigePikkusegaLõigud = poolitaLiigaPikadLoigud(lõigud);
-        return new ArrayList<>(õigePikkusegaLõigud);
-    }
 
+    public ArrayList<String> looLõigud(String sisu) {
+        List<String> lõigud;
+
+        if (sisu.startsWith("txt")) {
+            String tekst = sisu.substring(3); // eemaldame "txt"
+            lõigud = jagaTxtLõikudeks(tekst);
+
+            // txt puhul ka poolitame liiga pikad lõigud
+            lõigud = poolitaPDFLoigud(lõigud);
+
+        } else if (sisu.startsWith("pdf")) {
+            String tekst = sisu.substring(3); // eemaldame "pdf"
+
+            List<String> suurTekst = new ArrayList<>();
+            suurTekst.add(tekst);
+
+            lõigud = poolitaPDFLoigud(suurTekst);
+
+        } else {
+            throw new IllegalArgumentException("Tundmatu failitüüp");
+        }
+
+        return new ArrayList<>(lõigud);
+    }
 }

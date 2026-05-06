@@ -19,7 +19,7 @@ public class Faililugeja {
             }
         }
 
-        return sb.toString();
+        return "txt" + sb;
     }
 
     public String loePdfFail(String failitee) throws IOException {
@@ -27,7 +27,7 @@ public class Faililugeja {
 
         try (PDDocument dokument = Loader.loadPDF(fail)) {
             PDFTextStripper stripper = new PDFTextStripper();
-            return stripper.getText(dokument);
+            return "pdf" + stripper.getText(dokument);
         }
     }
 

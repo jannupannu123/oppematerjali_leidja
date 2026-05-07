@@ -3,7 +3,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class SonadeOtsija {
-    public List<String> leiaParimadLoigud(List<String> loigud, List<String> olulisedSonad, int mituTulemust) {
+    public List<String> leiaParimadLoigud(List<String> loigud, List<String> olulisedSonad, int mituTulemust) throws KasutajaViga{
         List<LoiguTulemus> tulemused = new ArrayList<>();
 
         for (String loik : loigud) {
@@ -55,7 +55,10 @@ public class SonadeOtsija {
             }
         }
 
-
+        if (parimad.isEmpty()) {
+        throw new KasutajaViga("Sobivaid lõike ei leitud. Proovi teistsuguseid märksõnu.");
+        }
+  
         return parimad;
     }
 

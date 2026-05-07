@@ -1,0 +1,3 @@
+public class AIViga extends Exception {
+    public AIViga(String message) { super(message); }
+}

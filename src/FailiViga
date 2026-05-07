@@ -1,0 +1,3 @@
+public class FailiViga extends Exception {
+    public FailiViga(String message) { super(message); }
+}

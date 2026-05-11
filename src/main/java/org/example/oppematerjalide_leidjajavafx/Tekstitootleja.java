@@ -12,7 +12,11 @@ public class Tekstitootleja {
      * @param kusimus võtab parameetriks küsimuse sõnena
      * @return
      */
-    public List<String> eraldaOlulisedSonad(String kusimus) {
+    public List<String> eraldaOlulisedSonad(String kusimus) throws KasutajaViga {
+         if (kusimus == null || kusimus.isBlank()) {
+        throw new KasutajaViga("Küsimus ei tohi olla tühi.");
+        }
+        
         kusimus = kusimus.toLowerCase();
         //eemaldame kõik sümbolid, mis ei ole tähed või numbrid
         kusimus = kusimus.replaceAll("[^a-zA-ZõäöüšžÕÄÖÜŠŽ0-9 ]", "");

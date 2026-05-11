@@ -12,30 +12,34 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.util.List;
 
-public class Peaklass {
+public class Peaklass extends Application {
+
     private TextField failiTeeVali;
     private TextArea kusimuseVali;
     private TextArea vastuseAla;
     private TextArea loikudeAla;
+
     private File valitudFail;
 
     @Override
     public void start(Stage stage) {
         Label tutvustus = new Label(
                 "See programm aitab leida konspektist küsimusega seotud lõigud " +
-                "ja koostab nende põhjal lühikese kokkuvõtte."
+                        "ja koostab nende põhjal lühikese kokkuvõtte."
         );
         tutvustus.setWrapText(true);
 
         Button valiFailiNupp = new Button("Vali fail");
+
         failiTeeVali = new TextField();
         failiTeeVali.setEditable(false);
+        failiTeeVali.setPromptText("Valitud fail");
 
         HBox failiRida = new HBox(10, valiFailiNupp, failiTeeVali);
         HBox.setHgrow(failiTeeVali, Priority.ALWAYS);
 
         kusimuseVali = new TextArea();
-        kusimuseVali.setPromptText("Kirjuta küsimus...");
+        kusimuseVali.setPromptText("Kirjuta küsimus siia...");
         kusimuseVali.setPrefRowCount(3);
         kusimuseVali.setWrapText(true);
 
@@ -44,10 +48,12 @@ public class Peaklass {
         vastuseAla = new TextArea();
         vastuseAla.setEditable(false);
         vastuseAla.setWrapText(true);
+        vastuseAla.setPromptText("AI kokkuvõte ilmub siia...");
 
         loikudeAla = new TextArea();
         loikudeAla.setEditable(false);
         loikudeAla.setWrapText(true);
+        loikudeAla.setPromptText("Kasutatud lõigud ilmuvad siia...");
 
         VBox sisu = new VBox(
                 10,
@@ -63,6 +69,7 @@ public class Peaklass {
         );
 
         sisu.setPadding(new Insets(15));
+
         VBox.setVgrow(vastuseAla, Priority.ALWAYS);
         VBox.setVgrow(loikudeAla, Priority.ALWAYS);
 
@@ -79,6 +86,7 @@ public class Peaklass {
         });
 
         Scene scene = new Scene(juur, 850, 650);
+
         stage.setTitle("Õppematerjalide leidja");
         stage.setScene(scene);
         stage.show();
@@ -88,8 +96,10 @@ public class Peaklass {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Vali .txt või .pdf fail");
 
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("TXT ja PDF failid", "*.txt", "*.pdf")
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("TXT ja PDF failid", "*.txt", "*.pdf"),
+                new FileChooser.ExtensionFilter("TXT failid", "*.txt"),
+                new FileChooser.ExtensionFilter("PDF failid", "*.pdf")
         );
 
         File fail = fileChooser.showOpenDialog(stage);
@@ -97,30 +107,28 @@ public class Peaklass {
         if (fail != null) {
             valitudFail = fail;
             failiTeeVali.setText(fail.getAbsolutePath());
+            vastuseAla.clear();
+            loikudeAla.clear();
         }
     }
 
     private void leiaVastus() {
-        if (valitudFail == null) {
-            naitaViga("Palun vali enne fail.");
-            return;
-        }
-
-        String kusimus = kusimuseVali.getText();
-
-        if (kusimus == null || kusimus.isBlank()) {
-            naitaViga("Palun sisesta küsimus.");
-            return;
-        }
-
         try {
-            vastuseAla.setText("Otsin vastust...");
-            loikudeAla.clear();
+            if (valitudFail == null) {
+                throw new KasutajaViga("Palun vali enne .txt või .pdf fail.");
+            }
+
+            String kusimus = kusimuseVali.getText();
 
             Faililugeja faililugeja = new Faililugeja();
             Tekstitootleja tekstitootleja = new Tekstitootleja();
             SonadeOtsija otsija = new SonadeOtsija();
             AIVastaja aiVastaja = new AIVastaja();
+
+            RakenduseLogija logija = new RakenduseLogija();
+
+            vastuseAla.setText("Otsin vastust...");
+            loikudeAla.clear();
 
             String sisu = faililugeja.loeFail(valitudFail.getAbsolutePath());
             List<String> loigud = tekstitootleja.looLõigud(sisu);
@@ -131,45 +139,47 @@ public class Peaklass {
                     loigud
             );
 
-            List<String> olulisedSonad = tekstitootleja.eraldaOlulisedSonad(kusimus);
-            List<String> parimad = otsija.leiaParimadLoigud(
-                    konspekt.getLoigud(),
-                    olulisedSonad,
-                    5
+            List<String> olulisedSonad =
+                    tekstitootleja.eraldaOlulisedSonad(kusimus);
+
+            List<String> parimad =
+                    otsija.leiaParimadLoigud(
+                            konspekt.getLoigud(),
+                            olulisedSonad,
+                            5
+                    );
+
+            String aiVastus =
+                    aiVastaja.vastaKusimusele(kusimus, parimad);
+
+            vastuseAla.setText(aiVastus);
+            loikudeAla.setText(vormindaLoigud(parimad));
+
+            logija.kirjutaLogi(
+                    valitudFail.getAbsolutePath(),
+                    kusimus,
+                    parimad,
+                    aiVastus
             );
 
-            if (parimad.isEmpty()) {
-                vastuseAla.setText("");
-                loikudeAla.setText("");
-                naitaViga("Sobivaid lõike ei leitud. Proovi teistsugust küsimust.");
-                return;
-            }
-
-            String aiVastus = aiVastaja.vastaKusimusele(kusimus, parimad);
-            vastuseAla.setText(aiVastus);
-
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < parimad.size(); i++) {
-                sb.append(i + 1)
-                        .append(". lõik:\n")
-                        .append(parimad.get(i))
-                        .append("\n\n");
-            }
-
-            loikudeAla.setText(sb.toString());
-
+        } catch (KasutajaViga | FailiViga | AIViga e) {
+            vastuseAla.setText("Viga: " + e.getMessage());
         } catch (Exception e) {
-            vastuseAla.setText("");
-            naitaViga("Tekkis viga: " + e.getMessage());
+            vastuseAla.setText("Ootamatu viga: " + e.getMessage());
         }
     }
 
-    private void naitaViga(String tekst) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Viga");
-        alert.setHeaderText(null);
-        alert.setContentText(tekst);
-        alert.showAndWait();
+    private String vormindaLoigud(List<String> loigud) {
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < loigud.size(); i++) {
+            sb.append(i + 1)
+                    .append(". lõik:\n")
+                    .append(loigud.get(i))
+                    .append("\n\n");
+        }
+
+        return sb.toString();
     }
 
     public static void main(String[] args) {

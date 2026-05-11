@@ -23,13 +23,13 @@ public class AIVastaja {
         }
     }
 
-    public String vastaKusimusele(String kusimus, List<String> parimadLoigud) {
+    public String vastaKusimusele(String kusimus, List<String> parimadLoigud) throws AIViga{
         if (parimadLoigud == null || parimadLoigud.isEmpty()) {
             return "Ma ei leidnud konspektist piisavalt infot, et küsimusele vastata.";
         }
 
         if (klient == null) {
-
+            throw new AIViga("OPENAI_API_KEY puudub.");
         }
 
         String kontekst = looKontekst(parimadLoigud);
@@ -67,7 +67,7 @@ public class AIVastaja {
                     .orElse("AI ei tagastanud vastust.");
 
         } catch (Exception e) {
-            return "AI vastuse genereerimisel tekkis viga: " + e.getMessage();
+            throw new AIViga("AI vastuse genereerimine ebaõnnestus.");
         }
     }
 

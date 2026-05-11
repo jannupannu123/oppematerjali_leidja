@@ -1,57 +1,178 @@
 package org.example.oppematerjalide_leidjajavafx;
 
-import java.io.IOException;
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+
+import java.io.File;
 import java.util.List;
-import java.util.Scanner;
 
 public class Peaklass {
-    public static void main(String[] args) throws IOException {
-        Scanner sc = new Scanner(System.in);
+    private TextField failiTeeVali;
+    private TextArea kusimuseVali;
+    private TextArea vastuseAla;
+    private TextArea loikudeAla;
+    private File valitudFail;
 
-        System.out.println("Tere! Programm loeb sisse konspekti ja leiab sealt sinu küsimusele" +
-                " vatsueks kõige asjakohasemad lõigud konspektist");
-        System.out.print("Sisesta failitee: ");
-        String failitee = sc.nextLine();
+    @Override
+    public void start(Stage stage) {
+        Label tutvustus = new Label(
+                "See programm aitab leida konspektist küsimusega seotud lõigud " +
+                "ja koostab nende põhjal lühikese kokkuvõtte."
+        );
+        tutvustus.setWrapText(true);
 
-        Faililugeja faililugeja = new Faililugeja();
-        String sisu = faililugeja.loeFail(failitee);
+        Button valiFailiNupp = new Button("Vali fail");
+        failiTeeVali = new TextField();
+        failiTeeVali.setEditable(false);
 
-        Tekstitootleja tekstitootleja = new Tekstitootleja();
-        List<String> loigud = tekstitootleja.looLõigud(sisu);
-        System.out.println("Lõikude arv: " + loigud.size());
+        HBox failiRida = new HBox(10, valiFailiNupp, failiTeeVali);
+        HBox.setHgrow(failiTeeVali, Priority.ALWAYS);
 
-        Konspekt konspekt = new Konspekt(failitee, sisu, loigud);
+        kusimuseVali = new TextArea();
+        kusimuseVali.setPromptText("Kirjuta küsimus...");
+        kusimuseVali.setPrefRowCount(3);
+        kusimuseVali.setWrapText(true);
 
-        System.out.println("Sisestage küsimus: ");
-        String kusimus = sc.nextLine();
-        List<String> olulisedSonad = tekstitootleja.eraldaOlulisedSonad(kusimus);
+        Button leiaVastusNupp = new Button("Leia vastus");
 
+        vastuseAla = new TextArea();
+        vastuseAla.setEditable(false);
+        vastuseAla.setWrapText(true);
 
+        loikudeAla = new TextArea();
+        loikudeAla.setEditable(false);
+        loikudeAla.setWrapText(true);
 
-        SonadeOtsija otsija = new SonadeOtsija();
-        List<String> parimad = otsija.leiaParimadLoigud(konspekt.getLoigud(), olulisedSonad, 3);
-        System.out.println("Olulised sõnad: " + olulisedSonad);
+        VBox sisu = new VBox(
+                10,
+                tutvustus,
+                failiRida,
+                new Label("Küsimus:"),
+                kusimuseVali,
+                leiaVastusNupp,
+                new Label("AI kokkuvõte:"),
+                vastuseAla,
+                new Label("Kasutatud lõigud:"),
+                loikudeAla
+        );
 
-        AIVastaja aiVastaja = new AIVastaja();
-        String aiVastus = aiVastaja.vastaKusimusele(kusimus, parimad);
+        sisu.setPadding(new Insets(15));
+        VBox.setVgrow(vastuseAla, Priority.ALWAYS);
+        VBox.setVgrow(loikudeAla, Priority.ALWAYS);
 
-        System.out.println();
-        System.out.println("---- AI VASTUS ----");
-        System.out.println(aiVastus);
+        BorderPane juur = new BorderPane();
+        juur.setCenter(sisu);
 
-        // prindib teksti sedasi ekraanile et oleks mõnusam lugeda
-        /*for (String loik : parimad) {
-            //System.out.println(loik);
-            String[] sonad = loik.split("\\s+");
-            for (int i = 0; i < sonad.length; i++) {
-                System.out.print(sonad[i] + " ");
-                if ((i + 1) % 10 == 0) {
-                    System.out.println();
-                }
+        valiFailiNupp.setOnAction(e -> valiFail(stage));
+        leiaVastusNupp.setOnAction(e -> leiaVastus());
+
+        kusimuseVali.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER && e.isControlDown()) {
+                leiaVastus();
             }
-            System.out.println();
-            System.out.println("------------------------");
-        }*/
+        });
 
+        Scene scene = new Scene(juur, 850, 650);
+        stage.setTitle("Õppematerjalide leidja");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private void valiFail(Stage stage) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Vali .txt või .pdf fail");
+
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("TXT ja PDF failid", "*.txt", "*.pdf")
+        );
+
+        File fail = fileChooser.showOpenDialog(stage);
+
+        if (fail != null) {
+            valitudFail = fail;
+            failiTeeVali.setText(fail.getAbsolutePath());
+        }
+    }
+
+    private void leiaVastus() {
+        if (valitudFail == null) {
+            naitaViga("Palun vali enne fail.");
+            return;
+        }
+
+        String kusimus = kusimuseVali.getText();
+
+        if (kusimus == null || kusimus.isBlank()) {
+            naitaViga("Palun sisesta küsimus.");
+            return;
+        }
+
+        try {
+            vastuseAla.setText("Otsin vastust...");
+            loikudeAla.clear();
+
+            Faililugeja faililugeja = new Faililugeja();
+            Tekstitootleja tekstitootleja = new Tekstitootleja();
+            SonadeOtsija otsija = new SonadeOtsija();
+            AIVastaja aiVastaja = new AIVastaja();
+
+            String sisu = faililugeja.loeFail(valitudFail.getAbsolutePath());
+            List<String> loigud = tekstitootleja.looLõigud(sisu);
+
+            Konspekt konspekt = new Konspekt(
+                    valitudFail.getAbsolutePath(),
+                    sisu,
+                    loigud
+            );
+
+            List<String> olulisedSonad = tekstitootleja.eraldaOlulisedSonad(kusimus);
+            List<String> parimad = otsija.leiaParimadLoigud(
+                    konspekt.getLoigud(),
+                    olulisedSonad,
+                    5
+            );
+
+            if (parimad.isEmpty()) {
+                vastuseAla.setText("");
+                loikudeAla.setText("");
+                naitaViga("Sobivaid lõike ei leitud. Proovi teistsugust küsimust.");
+                return;
+            }
+
+            String aiVastus = aiVastaja.vastaKusimusele(kusimus, parimad);
+            vastuseAla.setText(aiVastus);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < parimad.size(); i++) {
+                sb.append(i + 1)
+                        .append(". lõik:\n")
+                        .append(parimad.get(i))
+                        .append("\n\n");
+            }
+
+            loikudeAla.setText(sb.toString());
+
+        } catch (Exception e) {
+            vastuseAla.setText("");
+            naitaViga("Tekkis viga: " + e.getMessage());
+        }
+    }
+
+    private void naitaViga(String tekst) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Viga");
+        alert.setHeaderText(null);
+        alert.setContentText(tekst);
+        alert.showAndWait();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }

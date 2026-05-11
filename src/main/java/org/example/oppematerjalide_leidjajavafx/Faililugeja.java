@@ -8,7 +8,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
 public class Faililugeja {
-    public String loeTxtFail(String failitee) throws IOException {
+    public String loeTxtFail(String failitee) throws FailiViga {
         File fail = new File(failitee);
         StringBuilder sb = new StringBuilder();
 
@@ -16,27 +16,31 @@ public class Faililugeja {
             while (failiScanner.hasNextLine()) {
                 sb.append(failiScanner.nextLine()).append("\n");
             }
+        } catch (IOException e){
+            throw new FailiViga("TXT faili lugemisel tekkis viga.");
         }
 
         return "txt" + sb;
     }
 
-    public String loePdfFail(String failitee) throws IOException {
+    public String loePdfFail(String failitee) throws FailiViga {
         File fail = new File(failitee);
 
         try (PDDocument dokument = Loader.loadPDF(fail)) {
             PDFTextStripper stripper = new PDFTextStripper();
             return "pdf" + stripper.getText(dokument);
+        } catch (IOException e) {
+            throw new FailiViga("PDF faili lugemisel tekkis viga.");
         }
     }
 
-    public String loeFail(String failitee) throws IOException {
+    public String loeFail(String failitee) throws FailiViga {
         if (failitee.toLowerCase().endsWith(".txt")) {
             return loeTxtFail(failitee);
         } else if (failitee.toLowerCase().endsWith(".pdf")) {
             return loePdfFail(failitee);
         } else {
-            throw new IllegalArgumentException("Toetatud on ainult .txt ja .pdf failid.");
+            throw new FailiViga("Toetatud on ainult .txt ja .pdf failid.");
         }
     }
 }
